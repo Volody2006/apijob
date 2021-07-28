@@ -1,0 +1,37 @@
+version: '3'
+services:
+  rabbitmq:
+    image: rabbitmq:3.9
+    container_name: rabbitmq
+
+  postgres:
+    image: postgres:12.7
+#    volumes:
+#      - ./data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=api
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+  django:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+
+    ports:
+      - 127.0.0.1::8000:8000
+    depends_on:
+      - postgres
+
+
+  celery:
+    build: .
+    command: celery -A proj worker -l INFO -B
+    volumes:
+      - .:/code
+    depends_on:
+      - postgres
+      - rabbitmq
+
+
